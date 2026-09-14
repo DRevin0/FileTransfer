@@ -1,35 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <arpa/inet.h>
-#define BUFFER_SIZE 1024
-
-// Передаем указатель на порт который ввел пользователь в консоль | Указатель на структуру адреса, куда необходимо записать сам порт
-void validate_convert_port(char *port_str, struct sockaddr_in *sock_addr){
-
-    //Если порт или адрес равен 0 вывод ошибки через perror и завершение программы
-    int port;
-    if (port_str == NULL){
-        perror("Invalid port_str\n");
-        exit(EXIT_FAILURE);
-    }
-    if (sock_addr == NULL){
-        perror("Invalid sock_addr\n");
-        exit(EXIT_FAILURE);
-    }
-    // atoi приводит строку к числу, если были буквы в порте, то вывод ошибки
-    port = atoi(port_str);
-    if (port == 0){
-        perror("Invalid prot\n");
-        exit(EXIT_FAILURE);
-    }
-    
-    // Берем поле sin_port и записываем в него перевернутое значение(с помощью htons), так как в пк и в сети данные храняться по разному
-    sock_addr->sin_port = htons((uint16_t)port);
-    // Чисто проверка
-    printf("Port: %d\n", htons(sock_addr->sin_port));
-}
-
+#include "utils.h"
 // argc - количество аргументов при запуске, argv - массив аргументов. Пр: ./server 8080 - argc == 2; argv[0] = ./server;argv[1]=8080
 int main(int argc, char *argv[]){
     int server_socket;//дескриптор
@@ -70,6 +39,6 @@ int main(int argc, char *argv[]){
         return -4;
     }
     printf("reveived: %s\n", buffer);
-    void(close(server_socket));
+    (void)close(server_socket);
     return 0;
 }
