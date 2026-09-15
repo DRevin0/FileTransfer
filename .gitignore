@@ -1,0 +1,10 @@
+client
+server
+
+.o
+.out
+
+.vscode/
+
+test_data/
+*.tmp
