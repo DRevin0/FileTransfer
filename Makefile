@@ -1,13 +1,23 @@
 CC = gcc
-CFLAGS = -Wall -g
+CFLAGS = -Wall -g -Iinclude
+BUILD_DIR = build
+SRC_DIR = src
 
-all: client server
+CLIENT_BIN = $(BUILD_DIR)/client
+SERVER_BIN = $(BUILD_DIR)/server
 
-client: udpClient.c utils.c 
-	$(CC) $(CFLAGS) udpClient.c utils.c -o client
+.PHONY: all clean
 
-server: udpServer.c utils.c 
-	$(CC) $(CFLAGS) udpServer.c utils.c -o server
+all: $(CLIENT_BIN) $(SERVER_BIN)
+
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
+
+$(CLIENT_BIN): $(SRC_DIR)/udpClient.c $(SRC_DIR)/utils.c $(SRC_DIR)/sha256.c | $(BUILD_DIR)
+	$(CC) $(CFLAGS) $^ -o $@
+
+$(SERVER_BIN): $(SRC_DIR)/udpServer.c $(SRC_DIR)/utils.c $(SRC_DIR)/sha256.c | $(BUILD_DIR)
+	$(CC) $(CFLAGS) $^ -o $@
 
 clean:
-	rm -f client server
+	rm -f $(CLIENT_BIN) $(SERVER_BIN)

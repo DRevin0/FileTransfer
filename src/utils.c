@@ -1,4 +1,4 @@
-#include "utils.h"
+#include "../include/utils.h"
 
 // Передаем указатель на порт который ввел пользователь в консоль | Указатель на структуру адреса, куда необходимо записать сам порт
 void validate_convert_port(char *port_str, struct sockaddr_in *sock_addr){
