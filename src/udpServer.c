@@ -41,7 +41,7 @@ int receive_file(int server_socket, FILE *file, struct sockaddr_in *client_addr,
         count += 1;
         if(count % 10000 == 0){
             printf("\rПринято пакетов: %d", count);
-            fflush(stdout)
+            fflush(stdout);
         }
     }
 }
