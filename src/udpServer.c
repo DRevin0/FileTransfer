@@ -10,7 +10,7 @@ int server_socket;
 void handle_sigint(int sig) {
     printf("\nПолучен сигнал завершения. Освобождаю порт и выключаю сервер...\n");
     close(server_socket);
-    exit(0); // Штатно завершаем программу
+    exit(0);
 }
 int receive_file(int server_socket, FILE *file, struct sockaddr_in *client_addr, socklen_t *addr_size){
     Pack packet;
@@ -39,34 +39,26 @@ int receive_file(int server_socket, FILE *file, struct sockaddr_in *client_addr,
         }
         fwrite(packet.data, 1, packet.data_size, file);
         count += 1;
-        printf("Записан пакет %d (смещение: %ld, байт: %zu\n)\n", packet.current_number, offset, packet.data_size);
+        if(count % 10000 == 0){
+            printf("\rПринято пакетов: %d", count);
+            fflush(stdout)
+        }
     }
 }
-void hash_file_mmap(int fd, char *out_hash){
-    struct stat st;
-    if(fstat(fd, &st)<0){
-        perror("fstat failed");
-        return;
-    }
-    size_t file_size = st.st_size;
-    if(file_size == 0){
-        sha256 sha;
-        sha256_init(&sha);
-        sha256_finalize_hex(&sha, out_hash);
-        return;
-    }
-    char *mapped = mmap(NULL, file_size, PROT_READ, MAP_SHARED, fd, 0);
-        if(mapped == MAP_FAILED){
-            perror("mmap failed");
-            return;
-        }
-        madvise(mapped, file_size, MADV_SEQUENTIAL);
-        sha256 sha;
-        sha256_init(&sha);
-        sha256_append(&sha, mapped, file_size);
-        sha256_finalize_hex(&sha, out_hash);
+void hash_file_stream(FILE *file, char *out_hash) {
+    rewind(file);
 
-        munmap(mapped, file_size);
+    sha256 sha;
+    sha256_init(&sha);
+
+    char chunk[1024 * 1024]; 
+    size_t bytes_read;
+
+    while ((bytes_read = fread(chunk, 1, sizeof(chunk), file)) > 0) {
+        sha256_append(&sha, chunk, bytes_read);
+    }
+
+    sha256_finalize_hex(&sha, out_hash);
 }
 
 int main(int argc, char *argv[]){
@@ -84,6 +76,11 @@ int main(int argc, char *argv[]){
     if(server_socket < 0){
         perror("Socketfailed");
         return -2;
+    }
+
+    int rcvbuf = 16*1024*1024;
+    if(setsockopt(server_socket, SOL_SOCKET, SO_RCVBUF, &rcvbuf, sizeof(rcvbuf))<0){
+        perror("setsockopt SO_RCVBIF failed");
     }
     
     signal(SIGINT, handle_sigint);
@@ -134,8 +131,7 @@ int main(int argc, char *argv[]){
         }
         fflush(file);
         char local_hash[SHA256_HEX_SIZE];
-        int fd = fileno(file);
-        hash_file_mmap(fd, local_hash);
+        hash_file_stream(file, local_hash);
         fclose(file);
 
         char remote_hash[SHA256_HEX_SIZE];

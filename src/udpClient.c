@@ -23,8 +23,8 @@ void dropfile(char *a, int client_socket, struct sockaddr_in *server_addr){
     sha256_finalize_hex(&sha, hex_hash);
     printf("SHA-256 файла: %s\n", hex_hash);
     packet.data_size = 0;
-    sendto(client_socket, &packet, sizeof(Pack), 0, (struct sockaddr *)server_addr, sizeof(*server_addr));//Отправка последнего пакета с 0
-    sendto(client_socket, hex_hash, strlen(hex_hash), 0, (struct sockaddr *)server_addr, sizeof(*server_addr));//Отправка хэша
+    sendto(client_socket, &packet, sizeof(Pack), 0, (struct sockaddr *)server_addr, sizeof(*server_addr));
+    sendto(client_socket, hex_hash, strlen(hex_hash), 0, (struct sockaddr *)server_addr, sizeof(*server_addr));
     
 }
 
@@ -42,6 +42,11 @@ int main(int argc, char *argv[]){
     if(client_socket<0){
         perror("Socket failed");
         return -2;
+    }
+
+    int sndbuf = 16 * 1024 * 1024; 
+    if (setsockopt(client_socket, SOL_SOCKET, SO_SNDBUF, &sndbuf, sizeof(sndbuf)) < 0) {
+        perror("setsockopt SO_SNDBUF failed");
     }
     server_addr.sin_family = AF_INET;
     validate_convert_port(argv[1], &server_addr);

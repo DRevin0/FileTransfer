@@ -1,9 +1,7 @@
 #include "../include/utils.h"
 
-// Передаем указатель на порт который ввел пользователь в консоль | Указатель на структуру адреса, куда необходимо записать сам порт
 void validate_convert_port(char *port_str, struct sockaddr_in *sock_addr){
 
-    //Если порт или адрес равен 0 вывод ошибки через perror и завершение программы
     int port;
     if (port_str == NULL){
         perror("Invalid port_str\n");
@@ -13,16 +11,14 @@ void validate_convert_port(char *port_str, struct sockaddr_in *sock_addr){
         perror("Invalid sock_addr\n");
         exit(EXIT_FAILURE);
     }
-    // atoi приводит строку к числу, если были буквы в порте, то вывод ошибки
+
     port = atoi(port_str);
     if (port == 0){
         perror("Invalid prot\n");
         exit(EXIT_FAILURE);
     }
-    
-    // Берем поле sin_port и записываем в него перевернутое значение(с помощью htons), так как в пк и в сети данные храняться по разному
+
     sock_addr->sin_port = htons((uint16_t)port);
-    // Чисто проверка
     printf("Port: %d\n", ntohs(sock_addr->sin_port));
 }
 
